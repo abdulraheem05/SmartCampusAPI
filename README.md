@@ -25,7 +25,7 @@ The system is built using **JAX-RS (Jersey)** and follows REST architectural pri
 1. Clone repository:
 
 ```
-git clone <your-repo-link>
+git clone https://github.com/abdulraheem05/SmartCampusAPI.git
 ```
 
 2. Open project in NetBeans

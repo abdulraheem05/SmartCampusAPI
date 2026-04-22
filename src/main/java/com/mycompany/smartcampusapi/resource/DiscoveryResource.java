@@ -8,10 +8,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Path("/")
+@Produces(MediaType.APPLICATION_JSON)
 public class DiscoveryResource {
 
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
     public Map<String, Object> getInfo() {
 
         Map<String, Object> response = new HashMap<>();

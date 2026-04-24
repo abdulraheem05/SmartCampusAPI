@@ -1,223 +1,232 @@
-# Smart Campus REST API (JAX-RS)
+# Smart Campus API – RESTful Service (JAX-RS)
 
-## 📌 Overview
+## Overview
 
-This project implements a RESTful API for managing a Smart Campus system. The API allows management of:
+This project implements a RESTful API for managing a Smart Campus system. It allows managing **Rooms**, **Sensors**, and **Sensor Readings** using JAX-RS (Jersey).
 
-* Rooms
-* Sensors within rooms
-* Sensor readings (historical data)
+The system is designed following RESTful principles:
 
-The system is built using **JAX-RS (Jersey)** and follows REST architectural principles including proper HTTP methods, resource hierarchy, and status codes.
+* Resource-based architecture
+* Proper HTTP methods and status codes
+* Nested resource hierarchy
+* Structured JSON responses
+* Robust error handling and logging
 
 ---
 
-## ⚙️ How to Run
+## Technology Stack
 
-### Prerequisites
-
-* Java JDK 8+
+* Java
+* JAX-RS (Jersey)
 * Maven
-* NetBeans (recommended)
+* Apache Tomcat (Deployment)
+* In-memory data structures (HashMap, ArrayList)
 
-### Steps
+---
 
-1. Clone repository:
+## How to Run the Project
 
-```
-git clone https://github.com/abdulraheem05/SmartCampusAPI.git
-```
+### Option 1: Using Maven (Recommended)
 
-2. Open project in NetBeans
+1. Open terminal in project root
+2. Build project:
 
-3. Run main class:
-
-```
-SmartCampusAPI.java
+```bash
+mvn clean install
 ```
 
-4. Server starts at:
+3. Locate generated WAR file:
 
+```text
+target/SmartCampusAPI-1.0-SNAPSHOT.war
 ```
-http://localhost:8080/api/v1
+
+4. Copy WAR into Tomcat:
+
+```text
+apache-tomcat/webapps/
+```
+
+5. Start Tomcat server
+
+---
+
+### Option 2: Using NetBeans
+
+1. Open project in NetBeans
+2. Right-click → **Clean and Build**
+3. Locate WAR file in:
+
+```text
+target/SmartCampusAPI-1.0-SNAPSHOT.war
+```
+
+4. Copy to:
+
+```text
+apache-tomcat/webapps/
+```
+
+5. Start Tomcat
+
+---
+
+## Base URL
+
+```text
+http://localhost:8080/SmartCampusAPI-1.0-SNAPSHOT/api/v1
 ```
 
 ---
 
-## 🌐 API Endpoints
+## API Endpoints
 
-### 🔹 Discovery
+### Discovery Endpoint
 
-```
+```http
 GET /api/v1
 ```
 
----
-
-### 🔹 Rooms
-
-| Method | Endpoint    | Description       |
-| ------ | ----------- | ----------------- |
-| GET    | /rooms      | Get all rooms     |
-| POST   | /rooms      | Create room       |
-| GET    | /rooms/{id} | Get specific room |
-| DELETE | /rooms/{id} | Delete room       |
+Returns API metadata and available resources.
 
 ---
 
-### 🔹 Sensors
+### Room Management
 
-| Method | Endpoint          | Description     |
-| ------ | ----------------- | --------------- |
-| GET    | /sensors          | Get all sensors |
-| GET    | /sensors?type=CO2 | Filter sensors  |
-| POST   | /sensors          | Create sensor   |
-
----
-
-### 🔹 Sensor Readings
-
-| Method | Endpoint               | Description  |
-| ------ | ---------------------- | ------------ |
-| GET    | /sensors/{id}/readings | Get readings |
-| POST   | /sensors/{id}/readings | Add reading  |
+```http
+GET    /rooms
+POST   /rooms
+GET    /rooms/{id}
+DELETE /rooms/{id}
+```
 
 ---
 
-## 🧪 Sample CURL Commands
+### Sensor Management
+
+```http
+POST /sensors
+GET  /sensors
+GET  /sensors?type=CO2
+```
+
+---
+
+### Sensor Readings (Sub-Resource)
+
+```http
+GET  /sensors/{id}/readings
+POST /sensors/{id}/readings
+```
+
+---
+
+## Error Handling
+
+| Scenario              | Exception                       | HTTP Status               |
+| --------------------- | ------------------------------- | ------------------------- |
+| Room has sensors      | RoomNotEmptyException           | 409 Conflict              |
+| Invalid roomId        | LinkedResourceNotFoundException | 422 Unprocessable Entity  |
+| Sensor in maintenance | SensorUnavailableException      | 403 Forbidden             |
+| Unexpected error      | GlobalExceptionMapper           | 500 Internal Server Error |
+
+All errors return structured JSON responses.
+
+---
+
+## Logging
+
+Logging is implemented using:
+
+* ContainerRequestFilter
+* ContainerResponseFilter
+
+Logs include:
+
+* HTTP Method
+* Request URI
+* Response status code
+
+---
+
+## Sample cURL Commands
 
 ### Create Room
 
-```
-curl -X POST http://localhost:8080/api/v1/rooms \
+```bash
+curl -X POST http://localhost:8080/SmartCampusAPI-1.0-SNAPSHOT/api/v1/rooms \
 -H "Content-Type: application/json" \
--d '{"id":"R1","name":"Lab","capacity":50}'
+-d '{"id":"LIB-301","name":"Library","capacity":100}'
 ```
 
 ---
 
 ### Get Rooms
 
-```
-curl http://localhost:8080/api/v1/rooms
+```bash
+curl http://localhost:8080/SmartCampusAPI-1.0-SNAPSHOT/api/v1/rooms
 ```
 
 ---
 
 ### Create Sensor
 
-```
-curl -X POST http://localhost:8080/api/v1/sensors \
+```bash
+curl -X POST http://localhost:8080/SmartCampusAPI-1.0-SNAPSHOT/api/v1/sensors \
 -H "Content-Type: application/json" \
--d '{"id":"S1","type":"CO2","status":"ACTIVE","currentValue":0,"roomId":"R1"}'
+-d '{"id":"TEMP-1","type":"Temperature","status":"ACTIVE","roomId":"LIB-301"}'
 ```
 
 ---
 
 ### Filter Sensors
 
-```
-curl http://localhost:8080/api/v1/sensors?type=CO2
+```bash
+curl http://localhost:8080/SmartCampusAPI-1.0-SNAPSHOT/api/v1/sensors?type=Temperature
 ```
 
 ---
 
-### Add Reading
+### Add Sensor Reading
 
-```
-curl -X POST http://localhost:8080/api/v1/sensors/S1/readings \
+```bash
+curl -X POST http://localhost:8080/SmartCampusAPI-1.0-SNAPSHOT/api/v1/sensors/TEMP-1/readings \
 -H "Content-Type: application/json" \
--d '{"id":"RD1","timestamp":1710000000,"value":25.5}'
+-d '{"value":23.5}'
 ```
 
 ---
 
-### Get Readings
+## Conceptual Report
 
-```
-curl http://localhost:8080/api/v1/sensors/S1/readings
-```
+### Part 1: Service Architecture
+**Q: Explain the default lifecycle of a JAX-RS Resource class. How does this decision impact data synchronization?**
+By default, JAX-RS resource classes are request-scoped, meaning a new instance is created for every incoming request. Because instances are not shared, managing in-memory data requires using `static` collections (like `HashMap`) to persist data across different requests. This necessitates thread-safe practices, such as using `ConcurrentHashMap` or synchronized blocks, to prevent race conditions when multiple clients access or modify the data simultaneously.
 
----
+**Q: Why is HATEOAS considered a hallmark of advanced RESTful design?**
+HATEOAS (Hypermedia as the Engine of Application State) allows a client to interact with the API entirely through responses provided dynamically by the server. This decouples the client from hardcoded URLs, making the API more flexible and self-documenting. Client developers benefit because they can discover available actions and navigate the system without relying solely on external, static documentation.
 
-### Error Case (Invalid Room)
+### Part 2: Room Management
+**Q: What are the implications of returning only IDs versus full objects in a list?**
+Returning only IDs reduces network bandwidth and speeds up the initial response, which is beneficial for mobile or low-latency environments. However, it requires the client to make subsequent requests (round-trips) to fetch details for each ID. Returning full objects provides all data at once but increases the payload size, which can degrade performance if the list is very large.
 
-```
-curl -X POST http://localhost:8080/api/v1/sensors \
--H "Content-Type: application/json" \
--d '{"id":"S2","type":"CO2","status":"ACTIVE","roomId":"INVALID"}'
-```
+**Q: Is the DELETE operation idempotent in your implementation?**
+Yes, the implementation is idempotent. If a client sends the same DELETE request multiple times, the first request will successfully remove the room. Subsequent requests will find that the resource no longer exists and return a `404 Not Found`. While the status codes differ, the "state" of the server remains the same (the room is gone), satisfying the definition of idempotency.
 
----
+### Part 3: Sensor Operations
+**Q: Explain the consequences if a client sends data in a different format than JSON.**
+Because of the `@Consumes(MediaType.APPLICATION_JSON)` annotation, JAX-RS will reject requests with incompatible `Content-Type` headers (e.g., `text/plain`). The runtime will automatically return an `HTTP 415 Unsupported Media Type` error, ensuring the backend logic never attempts to process unparseable data formats.
 
-## 📘 REPORT ANSWERS
+**Q: Why is the query parameter approach superior for filtering collections?**
+Query parameters are intended for non-hierarchical data adjustments like filtering, sorting, or searching. Using the URL path for filters (e.g., `/sensors/type/CO2`) implies a rigid resource hierarchy that doesn't exist, whereas `?type=CO2` clearly communicates that the client is looking at the same collection but with a specific view or constraint applied.
 
----
+### Part 4: Sub-Resources
+**Q: Discuss the architectural benefits of the Sub-Resource Locator pattern.**
+This pattern promotes clean separation of concerns. Instead of one "God Class" managing every nested path, logic is delegated to specialized classes (like `SensorReadingResource`). This reduces code complexity, improves maintainability, and makes the API structure more intuitive by mirroring the logical relationship between sensors and their readings.
 
-### ✅ Part 1
+### Part 5: Error Handling & Logging
+**Q: Explain the risks of exposing internal Java stack traces to external consumers.**
+Exposing stack traces is a significant security risk as it reveals internal implementation details, such as class names, library versions, and server architecture. Attackers can use this information to identify specific vulnerabilities in the software stack or gain insights into the database structure to craft more targeted attacks.
 
-**Q: JAX-RS lifecycle?**
-
-By default, JAX-RS resource classes are instantiated **per request**. This means a new instance is created for each incoming HTTP request. This avoids shared state issues but requires careful management of shared data structures like HashMaps using static storage or proper synchronization to prevent race conditions.
-
----
-
-**Q: Why HATEOAS?**
-
-HATEOAS allows APIs to provide navigation links dynamically within responses. This reduces dependency on external documentation and enables clients to discover endpoints at runtime, improving flexibility and maintainability.
-
----
-
-### ✅ Part 2
-
-**Q: IDs vs full objects?**
-
-Returning only IDs reduces bandwidth usage and improves performance, but requires additional client calls. Returning full objects simplifies client-side processing but increases payload size. A balance depends on use case.
-
----
-
-**Q: Is DELETE idempotent?**
-
-Yes. Repeated DELETE requests produce the same result: the resource remains deleted. Even if the resource no longer exists, the system state does not change further.
-
----
-
-### ✅ Part 3
-
-**Q: @Consumes mismatch?**
-
-If a client sends data in an unsupported format (e.g., XML instead of JSON), JAX-RS returns **HTTP 415 Unsupported Media Type** automatically.
-
----
-
-**Q: QueryParam vs PathParam?**
-
-Query parameters are better for filtering because they are optional and flexible. Path parameters imply a fixed hierarchical structure, which is not suitable for dynamic filtering.
-
----
-
-### ✅ Part 4
-
-**Q: Sub-resource locator benefits?**
-
-It improves modularity and separation of concerns. Instead of one large controller, logic is split into smaller classes, making the API easier to maintain and scale.
-
----
-
-### ✅ Part 5
-
-**Q: Why HTTP 422 instead of 404?**
-
-422 is more accurate because the request is syntactically correct but semantically invalid (invalid reference inside payload). 404 implies the endpoint itself is missing.
-
----
-
-**Q: Stack trace risks?**
-
-Exposing stack traces can reveal internal implementation details such as class names, file structure, and libraries, which attackers can exploit.
-
----
-
-**Q: Why filters for logging?**
-
-Filters centralize cross-cutting concerns like logging, avoiding repetitive code in every resource method and ensuring consistency.
+**Q: Why use JAX-RS filters for cross-cutting concerns like logging?**
+Filters provide a centralized way to handle cross-cutting concerns without duplicating code. Instead of manually inserting logging statements into every resource method, a single filter intercepts all requests and responses. This ensures consistency, makes the code cleaner, and allows developers to enable or disable logging globally with minimal effort.
